@@ -1,38 +1,77 @@
-// Require Node.js standard library function to spawn a child process
-const spawn = require('child_process').spawn;
 const path = require('path');
+const { spawn } = require('child_process');
 
-process.chdir(path.join(__dirname, './server'));
+const startServer = (jarFile = 'paper.jar', serverPath = path.join(__dirname, './server'), options, context = {}) => {
+  const {
+    minMem = '2G',
+    maxMem = '2G',
+  } = options || {};
+  context.mcProcess = null;
 
-// let 
+  const mcProcess = spawn('java', [
+    Number.isNaN(Number(minMem)) ? `-Xms${minMem}` : `-Xms${minMem}G`,
+    Number.isNaN(Number(maxMem)) ? `-Xmx${maxMem}` : `-Xmx${maxMem}G`,
+    '-jar',
+    jarFile,
+    'nogui'
+  ], { cwd: serverPath });
 
-// Create a child process for the Minecraft server using the same java process
-// invocation we used manually before
-const mcProcess = spawn('java', [
-  '-Xms2G',
-  '-Xmx2G',
-  '-jar',
-  'paper.jar',
-  'nogui'
-]);
+  process.on('exit', function () {
+    console.log('*** Exited Minecraft server process');
+    mcProcess.kill();
+  });
 
-process.stdin.on('data', function (data) {
-  const command = data.toString();
-  console.log(JSON.stringify(command, null, 2));
-  mcProcess.stdin.write(command);
-});
+  process.on('SIGINT', function () {
+    process.exit(0);
+  });
 
-process.on('SIGINT', function () {
-  mcProcess.stdin.write('stop\n');
-});
+  const lineInfoRegex = new RegExp(/^\[[0-9][0-9]:[0-9][0-9]:[0-9][0-9] INFO]/g);
+  const lineWarnRegex = new RegExp(/^\[[0-9][0-9]:[0-9][0-9]:[0-9][0-9] WARN]/g);
 
+  let isExiting = false;
 
-function log(data) {
-  process.stdout.write(data.toString());
-}
-mcProcess.stdout.on('data', log);
-mcProcess.stderr.on('data', log);
+  const shutdownCheck = (line) => {
+    if (!line.match(lineInfoRegex)) {
+      return;
+    }
+    if (line.includes('All chunks are saved') && !isExiting) {
+      console.log('Exiting server.');
+      isExiting = true;
 
-mcProcess.stdout.on('end', () => {
-  process.exit(1);
-});
+      setTimeout(() => {
+        process.exit();
+      }, 5 * 1000);
+    }
+  }
+
+  const portBindCheck = (line) => {
+    if (!line.match(lineWarnRegex)) {
+      return;
+    }
+
+    if (line.includes('FAILED TO BIND TO PORT!')) {
+      console.error('**** FAILED TO BIND TO PORT!');
+      process.exit(1);
+    }
+  }
+
+  const middlewares = [
+    shutdownCheck,
+    portBindCheck,
+  ];
+
+  mcProcess.stdout.on('data', (data) => {
+    const line = data.toString();
+
+    middlewares.forEach(middleware => middleware(line));
+  });
+
+  mcProcess.stdout.pipe(process.stdout);
+  mcProcess.stderr.pipe(process.stderr);
+
+  process.stdin.pipe(mcProcess.stdin);
+
+  context.mcProcess = mcProcess;
+};
+
+module.exports = { startServer };

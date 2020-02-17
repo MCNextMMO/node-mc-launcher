@@ -1,0 +1,22 @@
+{
+  "name": "@mcnext/launcher-js",
+  "version": "1.0.0",
+  "description": "Minecraft server launcher using Node.js",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mcnextserver/node-mc-launcher.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mcnextserver/node-mc-launcher/issues"
+  },
+  "homepage": "https://github.com/mcnextserver/node-mc-launcher#readme"
+}
