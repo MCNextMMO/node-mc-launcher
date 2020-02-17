@@ -1,6 +1,7 @@
 {
   "name": "@mcnext/launcher-js",
-  "version": "1.0.0",
+  "version": "0.1.0",
+  "public": true,
   "description": "Minecraft server launcher using Node.js",
   "main": "index.js",
   "dependencies": {},
