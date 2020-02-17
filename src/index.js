@@ -34,7 +34,7 @@ const startServer = (jarFile = 'paper.jar', serverPath = path.join(__dirname, '.
     if (!line.match(lineInfoRegex)) {
       return;
     }
-    if (line.includes('Stopping the server') && !isExiting) {
+    if (line.match(/^\[[0-9][0-9]:[0-9][0-9]:[0-9][0-9] INFO]: Stopping the server/g) && !isExiting) {
       console.log('Exiting server.');
       isExiting = true;
 
@@ -49,7 +49,7 @@ const startServer = (jarFile = 'paper.jar', serverPath = path.join(__dirname, '.
       return;
     }
 
-    if (line.includes('FAILED TO BIND TO PORT!')) {
+    if (line.match(/^\[[0-9][0-9]:[0-9][0-9]:[0-9][0-9] WARN]: \*\*\*\* FAILED TO BIND TO PORT!/g)) {
       console.error('**** FAILED TO BIND TO PORT!');
       process.exit(1);
     }
