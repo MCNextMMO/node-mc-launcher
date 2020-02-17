@@ -34,7 +34,7 @@ const startServer = (jarFile = 'paper.jar', serverPath = path.join(__dirname, '.
     if (!line.match(lineInfoRegex)) {
       return;
     }
-    if (line.includes('All chunks are saved') && !isExiting) {
+    if (line.includes('Stopping the server') && !isExiting) {
       console.log('Exiting server.');
       isExiting = true;
 
